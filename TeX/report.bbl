@@ -1,0 +1,47 @@
+\begin{thebibliography}{1}
+
+\bibitem{word2vec}
+{Hitschler, Julian and van den Berg, Esther and Rehbein, Ines}.
+\newblock {Authorship Attribution with Convolutional Neural Networks and
+  POS-Eliding}.
+\newblock In {\em {Proceedings of the Workshop on Stylistic Variation}}, pages
+  {53--58}. {Association for Computational Linguistics}, {2017}.
+
+\bibitem{scalability}
+{Kapo{\v{c}}i{\={u}}t{\.{e}}-Dzikien{\.{e}}, Jurgita and {\v{S}}arkut{\.{e}},
+  Ligita and Utka, Andrius}.
+\newblock {The Effect of Author Set Size in Authorship Attribution for
+  Lithuanian}.
+\newblock In {\em {Proceedings of the 20th Nordic Conference of Computational
+  Linguistics (NODALIDA 2015) }}, pages {87--96}. {Link{\"o}ping University
+  Electronic Press, Sweden}, {2015}.
+
+\bibitem{n-gram-aa}
+{Sari, Yunita and Vlachos, Andreas and Stevenson, Mark}.
+\newblock {Continuous N-gram Representations for Authorship Attribution}.
+\newblock In {\em {Proceedings of the 15th Conference of the European Chapter
+  of the Association for Computational Linguistics: Volume 2, Short Papers}},
+  pages {267--273}. {Association for Computational Linguistics}, {2017}.
+
+\bibitem{micromessage}
+{Schwartz, Roy and Tsur, Oren and Rappoport, Ari and Koppel, Moshe}.
+\newblock {Authorship Attribution of Micro-Messages}.
+\newblock In {\em {Proceedings of the 2013 Conference on Empirical Methods in
+  Natural Language Processing}}, pages {1880--1891}. {Association for
+  Computational Linguistics}, {2013}.
+
+\bibitem{sockpuppet}
+{Solorio, Thamar and Hasan, Ragib and Mizan, Mainul}.
+\newblock {A Case Study of Sockpuppet Detection in Wikipedia}.
+\newblock In {\em {Proceedings of the Workshop on Language Analysis in Social
+  Media}}, pages {59--68}. {Association for Computational Linguistics}, {2013}.
+
+\bibitem{n-gram-vec-nli}
+{Vajjala, Sowmya and Banerjee, Sagnik}.
+\newblock {A study of N-gram and Embedding Representations for Native Language
+  Identification}.
+\newblock In {\em {Proceedings of the 12th Workshop on Innovative Use of NLP
+  for Building Educational Applications}}, pages {240--248}. {Association for
+  Computational Linguistics}, {2017}.
+
+\end{thebibliography}

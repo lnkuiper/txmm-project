@@ -1,0 +1,51 @@
+\documentclass[twocolumn]{article}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{enumitem}
+\usepackage{verbatim}
+% !TeX spellcheck = en_GB 
+
+\title{
+	Text and Multimedia Mining Project Report\\
+	\large Blog Authorship Attribution}
+\date{\today}
+\author{Laurens Kuiper (s4467299)}
+
+\renewenvironment{abstract}
+{\small
+	\begin{center}
+		\bfseries \abstractname\vspace{-.5em}\vspace{0pt}
+	\end{center}
+	\list{}{%
+		\setlength{\leftmargin}{3cm}
+		\setlength{\rightmargin}{\leftmargin}
+	}%
+	\item\relax}
+{\endlist}
+
+\begin{document}
+\twocolumn[
+\begin{@twocolumnfalse}
+\maketitle
+\begin{abstract}
+	This report presents results of using authorship attribution methods on blog data.
+	Blogs are regularly updated web pages, typically run by individuals, in an informational or conversational style.
+	Scalability limitations of conventional methods were tested on selections of blogs from 50-150 authors from a publicly available dataset, and an ablative study on the extracted features was performed.
+	The selections were constructed carefully as to not include authors with a low amount of blogs, or a low median blog length.
+	Finally, the performance of a tree boosting classifier in combination with the conventional methods, inspired by top submissions in various Kaggle competitions, was tested to verify whether this can improve authorship attribution results.\vspace{12pt}
+\end{abstract}
+\end{@twocolumnfalse}
+]
+\section{Introduction}
+a\cite{sockpuppet}
+b\cite{word2vec}
+c\cite{n-gram-aa}
+d\cite{n-gram-vec-nli}
+e\cite{scalability}
+a\cite{micromessage}
+\section{Resources}
+\section{Methods}
+\section{Results}
+\section{Conclusion}
+\bibliographystyle{plain}
+\bibliography{bibliography}
+\end{document}

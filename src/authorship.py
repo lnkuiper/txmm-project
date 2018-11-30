@@ -15,9 +15,11 @@ import string
 from collections import defaultdict
 import numpy as np
 from tqdm import tqdm
-from gensim.models import Word2Vec
+from math import log
 import warnings
 warnings.filterwarnings("ignore")
+warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
+from gensim.models import Word2Vec
 
 
 # Download the 'stopwords' and 'punkt' from the Natural Language Toolkit, you can comment the next lines if already present.
@@ -42,8 +44,12 @@ def load_test_data():
     return load_data(dataset + '/test/')
 
 
+def idf(doc_freq, corpus_size):
+    return log(corpus_size/(doc_freq+1))
+
+
 # Extract features from a given text
-def extract_features(text, w2v_dict):
+def extract_features(text, w2v_dict, idf_dict={}):
     bag_of_words = [x for x in wordpunct_tokenize(text)]
     sentences = [x for x in sent_tokenize(text)]
 
@@ -107,7 +113,8 @@ def extract_features(text, w2v_dict):
     features.append(sum([any(c in w.lower() for c in r'aeiou') for w in bag_of_words]))
 
     # Feature 20: word vector average
-    features += list(sum([w2v_dict.get(word) for word in bag_of_words if word in w2v_dict])/len(bag_of_words))
+
+    features += list(sum([w2v_dict.get(word)*idf_dict.get(word, 1) for word in bag_of_words if word in w2v_dict])/len(bag_of_words))
 
     return features
 
@@ -144,24 +151,30 @@ def bool_mask_list(list_a, mask):
 def main():
     print('Loading train data...')
     train_data = load_train_data()
-    print('Loading train data complete. Fitting Word2Vec model...')
-
+    print('Loading data complete. Fitting Word2Vec model...')
     bags_of_words = [wordpunct_tokenize(text.lower()) for text in train_data.data]
-    model = Word2Vec(bags_of_words, size=200)
+    model = Word2Vec(bags_of_words, size=100)
     w2v = dict(zip(model.wv.index2word, model.wv.syn0))
-    print('Word2Vec model fit. Extracting features...')
+    idf_dict = {}
+    # print('Word2Vec model fit. Computing IDFs...')
+    # words = [word for word in w2v]
+    # idfs = []
+    # for word in tqdm(words):
+    #     idfs.append(idf(sum([word in bag for bag in bags_of_words]), len(bags_of_words)))
+    # idf_dict = dict(zip(words, idfs))
+    # print('IDFs computed. Extracting features...')
 
     # Extract the features
-    features = [extract_features(text, w2v) for text in tqdm(train_data.data)]
-    print('\nNumber of features before selection:', len(features[0]))
+    print('Word2Vec model fit. Extracting features...')
+    features = [extract_features(text, w2v, idf_dict) for text in tqdm(train_data.data)]
+    print('Number of features before selection: ' + str(len(features[0])) + '. Finding best set using recursive strategy...')
     features = scale(features)
     estimator = SVC(kernel='linear')
-    selector = RFECV(estimator, step=20, cv=5, scoring='f1_micro', verbose=1, n_jobs=-1)
+    selector = RFECV(estimator, step=20, cv=5, scoring='f1_micro', verbose=0, n_jobs=-1)
     features = selector.fit_transform(features, train_data.target)
     mask = list(selector.support_)
-    print('\nNumber of features after selection:', len(features[0]))
     # features = SelectKBest(mutual_info_classif, k=100).fit_transform(features, train_data.target)
-    print('Extraction complete. Starting.')
+    print('Number of features found: ' + str(len(features[0])) + '. Training SVC...')
 
     # Classify and evaluate
     skf = sklearn.model_selection.StratifiedKFold(n_splits=10)
@@ -197,7 +210,7 @@ def main():
     if test:
         print('Scores on test data:')
         test_data = load_test_data()
-        test_features = [extract_features(text, w2v) for text in tqdm(test_data.data)]
+        test_features = [extract_features(text, w2v, idf_dict) for text in tqdm(test_data.data)]
         test_features = scale(test_features)
         test_features = [bool_mask_list(feats, mask) for feats in test_features]
 

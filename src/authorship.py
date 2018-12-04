@@ -50,8 +50,8 @@ def idf(doc_freq, corpus_size):
 
 # Extract features from a given text
 def extract_features(text, w2v_dict, idf_dict={}):
-    bag_of_words = [x for x in wordpunct_tokenize(text)]
-    sentences = [x for x in sent_tokenize(text)]
+    bag_of_words = [x.lower() for x in wordpunct_tokenize(text)]
+    sentences = [x.lower() for x in sent_tokenize(text)]
 
     features = []
 
@@ -104,17 +104,21 @@ def extract_features(text, w2v_dict, idf_dict={}):
     features += [text.lower().count(e) for e in emoticons]
 
     # Feature 17: total emoticon count 
-    features.append(sum([any(c in w.lower() for c in emoticons) for w in bag_of_words]))
+    features.append(sum([any(c in w for c in emoticons) for w in bag_of_words]))
 
     # Feature 18: count of each specific digit
     features += [text.count(x) for x in [str(y) for y in range(10)]]
 
     # Feature 19: amount of words without vowels
-    features.append(sum([any(c in w.lower() for c in r'aeiou') for w in bag_of_words]))
+    features.append(sum([any(c in w for c in r'aeiou') for w in bag_of_words]))
 
     # Feature 20: word vector average
-
     features += list(sum([w2v_dict.get(word)*idf_dict.get(word, 1) for word in bag_of_words if word in w2v_dict])/len(bag_of_words))
+
+    # Feature 21: bigrams
+    for c1 in string.ascii_lowercase:
+        for c2 in string.ascii_lowercase:
+            features.append(text.lower().count(c1 + c2))
 
     return features
 
@@ -170,7 +174,7 @@ def main():
     print('Number of features before selection: ' + str(len(features[0])) + '. Finding best set using recursive strategy...')
     features = scale(features)
     estimator = SVC(kernel='linear')
-    selector = RFECV(estimator, step=20, cv=5, scoring='f1_micro', verbose=0, n_jobs=-1)
+    selector = RFECV(estimator, step=25, cv=5, scoring='f1_micro', verbose=1, n_jobs=-1)
     features = selector.fit_transform(features, train_data.target)
     mask = list(selector.support_)
     # features = SelectKBest(mutual_info_classif, k=100).fit_transform(features, train_data.target)

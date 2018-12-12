@@ -1,14 +1,16 @@
-\documentclass[twocolumn]{article}
-\usepackage[a4paper, margin=2cm]{geometry}
+\documentclass[twocolumn, 12pt]{article}
+\usepackage[a4paper, margin=2.33cm]{geometry}
 \usepackage{enumitem}
 \usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{titlesec}
 % !TeX spellcheck = en_GB 
 
 \title{
-	Text and Multimedia Mining Project Report\\
-	\large Blog Authorship Attribution}
+	\textbf{Authorship Attribution and Scalability\\
+		\large Exploring Gradient Boosting}}
 \date{\today}
-\author{Laurens Kuiper (s4467299)}
+\author{\textbf{Laurens Kuiper} (s4467299)}
 
 \renewenvironment{abstract}
 {\small
@@ -16,36 +18,81 @@
 		\bfseries \abstractname\vspace{-.5em}\vspace{0pt}
 	\end{center}
 	\list{}{%
-		\setlength{\leftmargin}{3cm}
+		\setlength{\leftmargin}{0.8cm}
 		\setlength{\rightmargin}{\leftmargin}
 	}%
 	\item\relax}
 {\endlist}
 
 \begin{document}
-\twocolumn[
-\begin{@twocolumnfalse}
+% \twocolumn[
+% \begin{@twocolumnfalse}
+
+% \end{@twocolumnfalse}
+% ]
 \maketitle
+\begin{samepage}
 \begin{abstract}
-	This report presents results of using authorship attribution methods on blog data.
+	This report presents results of using authorship attribution methods on weblog data.
 	Blogs are regularly updated web pages, typically run by individuals, in an informational or conversational style.
 	Scalability limitations of conventional methods were tested on selections of blogs from 50-150 authors from a publicly available dataset, and an ablative study on the extracted features was performed.
 	The selections were constructed carefully as to not include authors with a low amount of blogs, or a low median blog length.
-	Finally, the performance of a tree boosting classifier in combination with the conventional methods, inspired by top submissions in various Kaggle competitions, was tested to verify whether this can improve authorship attribution results.\vspace{12pt}
+	Finally, the performance of a gradient boosting classifier in combination with the conventional methods, inspired by top submissions in various Kaggle competitions, was tested to verify whether this can improve authorship attribution results.\vspace{12pt}
 \end{abstract}
-\end{@twocolumnfalse}
-]
-\section{Introduction}
-a\cite{sockpuppet}
-b\cite{word2vec}
-c\cite{n-gram-aa}
-d\cite{n-gram-vec-nli}
-e\cite{scalability}
-a\cite{micromessage}
-\section{Resources}
-\section{Methods}
+\include{introduction}
+\end{samepage}
+\section{Related Work}
+Before machine learning methods became the dominant approach to authorship attribution, the set of candidate authors was usually kept small \cite{word2vec}, and for good reason.
+Since then, classification and feature extraction methods have improved, and have allowed for larger dataset sizes.
+Notable feature sets include character N-grams, embedding representations \cite{n-gram-vec-nli}, and punctuation use \cite{sockpuppet}.
+The most popular and often most effective classifiers support vector machines (SVM) and (convolutional) neural networks \cite{word2vec}\cite{n-gram-aa}.
+
+Due to recent developments on the internet, the average size of documents has decreased, while the size of the set of candidate authors has increased.
+For classification models to work well on small documents collecting more data always help, as well as clever feature extraction \cite{micromessage}.
+In general, when the number of candidate authors increases, the performance of the classifier decreases, but the type of features that are extracted can counteract this effect \cite{scalability}.
+
+On \href{kaggle.com}{Kaggle}, an on-line community for data scientists and machine learners, various machine learning competitions are often held, including classification challenges.
+These challenges bring out creative solutions.
+Clever features are extracted, and classifiers are applied in ingenious ways.
+One classifier that stands out is XGBoost \cite{xgboost}, an open source gradient boosting library, which works especially well on tabular data.
+It makes an appearance in many winning submissions.
+Even though its speciality is tabular data, it can even be used in image labelling challenges.
+The approach is often to train another classifier first, and fit XGBoost on the output of the first classifier to fine-tune the prediction.
+
+Our approach is similar.
+We will first train an SVM, before applying XGBoost.
+Not only to improve classifier performance, but to improve scalability.
+
+\section{Methodology}
+In terms of machine learning, authorship attribution is a supervised classification task.
+With classification, the aim is to fit a model on training instances, along with their associated class labels.
+Here, the training instances are documents, and the class labels are the corresponding authors of the documents.
+
+\subsection{Dataset}
+All experiments were carried out dataset containing blog data gathered from \href{blogger.com}{blogger.com} in August 2004.
+The dataset is publicly available on \href{https://www.kaggle.com/rtatman/blog-authorship-corpus}{Kaggle.com}, and contains $681,288$ posts from $19,320$ bloggers.
+
+[EXPLORATORY DATA ANALYSIS WITH PLOTS TO COME HERE]
+
+The dataset was filtered to deal with outliers etc...
+
+\subsection{Feature Extraction}
+Different feature sets will be discussed here.
+Many features are being worked on, but nothing is set in stone yet.
+They will be reported here when they are, and experiments are being done.
+
+\subsection{Classification}
+Classification with SVM will be discussed here, as well as re-classification with XGBoost.
+However, same as with feature extraction, this is not set in stone, and therefore it is not productive to write about it yet.
+10-fold cross-validation will be used.
+
+\subsection{Evaluation}
+Both $precision$ and $recall$ will be reported, but the model will optimize $F_1$ score during training.
+
 \section{Results}
+\section{Discussion}
 \section{Conclusion}
+\newpage
 \bibliographystyle{plain}
 \bibliography{bibliography}
 \end{document}

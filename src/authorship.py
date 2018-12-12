@@ -67,16 +67,11 @@ def extract_features(text, w2v_dict, idf_dict={}):
     # Feature 4: average words per sentence
     features.append(len(bag_of_words)/len(sentences))
 
-    # Features 5-9: count the number of digits, spaces, lowercase, uppercase and other characters
+    # Features 5-9: count the number of digits, lowercase, uppercase and other characters
     features.append(sum(c.isdigit() for c in text))
-    features.append(sum(c.isspace() for c in text))
     features.append(sum(c.islower() for c in text))
     features.append(sum(c.isupper() for c in text))
-    features.append(len(text) - sum(features[4:8]))
-
-    # Feature 10: each punctuation count
-    punctuation = ['.',',','?','!','(',')',':',';','\'','\"', '<', '>', '\\', '/']
-    features += [text.count(p) for p in punctuation]
+    features.append(len(text) - sum(features[4:7]))
 
     # Feature 11: counts of each upper- and lowercase letter
     features += [text.count(l) for l in list(string.ascii_lowercase) + list(string.ascii_uppercase)]
@@ -92,7 +87,10 @@ def extract_features(text, w2v_dict, idf_dict={}):
     all_tags = ['CC','CD','DT','EX','IN','JJ','JJR','JJS','LS','MD','NN','NNP','NNS','PDT','POS','PRP',
                 'RB','RBR','RBS','RP','TO','UH','VB','VBD','VBG','VBN','VBP','VBZ','WDT','WP','WRB']
     tags = [p[1] for p in pos_tag(bag_of_words)]
-    features += [tags.count(pos) for pos in all_tags]
+    for t1 in all_tags:
+        features.append(tags.count(t1))
+        for t2 in all_tags:
+            features.append(sum(1 for i in range(len(all_tags)) if all_tags[i:i+2]==[t1, t2]))
 
     # Feature 15: count of each stopword
     features += [bag_of_words.count(sw) for sw in stop_words]
@@ -116,8 +114,10 @@ def extract_features(text, w2v_dict, idf_dict={}):
     features += list(sum([w2v_dict.get(word)*idf_dict.get(word, 1) for word in bag_of_words if word in w2v_dict])/len(bag_of_words))
 
     # Feature 21: bigrams
-    for c1 in string.ascii_lowercase:
-        for c2 in string.ascii_lowercase:
+    tokens = string.ascii_lowercase + '.,?!():;\'\"<>\\/- '
+    for c1 in tokens:
+        features.append(text.lower().count(c1))
+        for c2 in tokens:
             features.append(text.lower().count(c1 + c2))
 
     return features
@@ -157,12 +157,12 @@ def main():
     train_data = load_train_data()
     print('Loading data complete. Fitting Word2Vec model...')
     bags_of_words = [wordpunct_tokenize(text.lower()) for text in train_data.data]
-    model = Word2Vec(bags_of_words, size=100)
+    model = Word2Vec(bags_of_words, size=150)
     w2v = dict(zip(model.wv.index2word, model.wv.syn0))
     idf_dict = {}
-    # print('Word2Vec model fit. Computing IDFs...')
-    # words = [word for word in w2v]
-    # idfs = []
+    print('Word2Vec model fit. Computing IDFs...')
+    words = [word for word in w2v]
+    idfs = []
     # for word in tqdm(words):
     #     idfs.append(idf(sum([word in bag for bag in bags_of_words]), len(bags_of_words)))
     # idf_dict = dict(zip(words, idfs))
@@ -177,7 +177,6 @@ def main():
     selector = RFECV(estimator, step=25, cv=5, scoring='f1_micro', verbose=1, n_jobs=-1)
     features = selector.fit_transform(features, train_data.target)
     mask = list(selector.support_)
-    # features = SelectKBest(mutual_info_classif, k=100).fit_transform(features, train_data.target)
     print('Number of features found: ' + str(len(features[0])) + '. Training SVC...')
 
     # Classify and evaluate

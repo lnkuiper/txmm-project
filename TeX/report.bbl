@@ -1,5 +1,10 @@
 \begin{thebibliography}{1}
 
+\bibitem{xgboost}
+Tianqi Chen and Carlos Guestrin.
+\newblock Xgboost: {A} scalable tree boosting system.
+\newblock {\em CoRR}, abs/1603.02754, 2016.
+
 \bibitem{word2vec}
 {Hitschler, Julian and van den Berg, Esther and Rehbein, Ines}.
 \newblock {Authorship Attribution with Convolutional Neural Networks and

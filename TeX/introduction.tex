@@ -1,0 +1,17 @@
+% !TeX root = ./report.tex
+\section{Introduction}
+Authorship attribution is the task of distinguishing texts written by different authors from a set of candidate authors, and finds use in historical and forensic applications.
+When considering hundreds of authors, and thousands of texts, the problem goes far beyond human potential limits.
+By extracting textual features from each document it becomes a computational/statistical problem, which can be approached using various machine learning methods.
+The effectiveness of current techniques varies depending on the context of the task.
+Included in the variables that affect the performance of authorship attribution systems are the size of the set of candidate authors, the size of the dataset, and the length of the texts.
+
+At the end of the twentieth century the emphasis of many websites on the Internet slowly shifted towards user-generated content, and participation.
+This had lead to a constant influx of electronic text documents and authors.
+Many of these authors post several short documents a day in the form of messages, tweets and blogs, sometimes anonymously.
+The challenges that these developments bring, as well as the flexibility of machine learning approaches, have lead to computational authorship attribution finding more and more applications.
+
+The central research question of this report is how well computational authorship attribution techniques scale with the amount of candidate authors, and to what extent collecting more data improves effectiveness.
+Finally, experiments with XGBoost, a gradient boosting classifier, in combination with another classifier, will be conducted.
+The aim is to design a system that scales well with the amount of candidate authors, even when document length is relatively short.
+All experiments were done on a publicly available dataset containing blog post data collected in 2004, found on \href{kaggle.com}{Kaggle} .

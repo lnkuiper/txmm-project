@@ -3,6 +3,7 @@ from nltk.tokenize import wordpunct_tokenize, sent_tokenize
 from nltk import pos_tag
 import nltk
 import os
+import pickle
 import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection
@@ -28,19 +29,16 @@ from gensim.models import Word2Vec
 # nltk.download('averaged_perceptron_tagger')
 stop_words = set(stopwords.words('english'))
 
-dataset = '50'
-test = False
-
 # Load the dataset into memory from the filesystem
 def load_data(dir_name):
-    return sklearn.datasets.load_files('../data/%s' % dir_name, encoding='utf-8')
+    return sklearn.datasets.load_files('../data/raw/%s' % dir_name, encoding='utf-8')
 
 
-def load_train_data():
+def load_train_data(dataset):
     return load_data(dataset + '/train/')
 
 
-def load_test_data():
+def load_test_data(dataset):
     return load_data(dataset + '/test/')
 
 
@@ -128,9 +126,9 @@ def classify(train_features, train_labels, test_features):
     # TODO: (Optional) If you would like to test different how classifiers would perform different, you can alter
     # TODO: the classifier here.
     # clf = MLPClassifier(hidden_layer_sizes=(256,)) # Performs significantly worse
-    clf = SVC(kernel='linear')
+    clf = SVC(kernel='linear', probability=True)
     clf.fit(train_features, train_labels)
-    return clf.predict(test_features)
+    return clf.predict(test_features), clf.predict_log_proba(test_features)
 
 
 # Evaluate predictions (y_pred) given the ground truth (y_true)
@@ -148,19 +146,22 @@ def evaluate(y_true, y_pred):
 
     return recall, precision, f1_score
 
+
 def bool_mask_list(list_a, mask):
     return [a for (a, b) in zip(list_a, mask) if b]
 
+
 # The main program
-def main():
-    print('Loading train data...')
-    train_data = load_train_data()
-    print('Loading data complete. Fitting Word2Vec model...')
+def experiments(dataset='50', test=False):
+    print('Dataset size:', dataset)
+    # print('Loading train data...')
+    train_data = load_train_data(dataset)
+    # print('Loading data complete. Fitting Word2Vec model...')
     bags_of_words = [wordpunct_tokenize(text.lower()) for text in train_data.data]
     model = Word2Vec(bags_of_words, size=150)
     w2v = dict(zip(model.wv.index2word, model.wv.syn0))
     idf_dict = {}
-    print('Word2Vec model fit. Computing IDFs...')
+    # print('Word2Vec model fit. Computing IDFs...')
     words = [word for word in w2v]
     idfs = []
     # for word in tqdm(words):
@@ -169,15 +170,18 @@ def main():
     # print('IDFs computed. Extracting features...')
 
     # Extract the features
-    print('Word2Vec model fit. Extracting features...')
-    features = [extract_features(text, w2v, idf_dict) for text in tqdm(train_data.data)]
-    print('Number of features before selection: ' + str(len(features[0])) + '. Finding best set using recursive strategy...')
+    # print('Word2Vec model fit. Extracting features...')
+    features = [extract_features(text, w2v, idf_dict) for text in train_data.data]
+    # print('Number of features before selection: ' + str(len(features[0])) + '. Finding best set using recursive strategy...')
     features = scale(features)
-    estimator = SVC(kernel='linear')
-    selector = RFECV(estimator, step=25, cv=5, scoring='f1_micro', verbose=1, n_jobs=-1)
-    features = selector.fit_transform(features, train_data.target)
-    mask = list(selector.support_)
-    print('Number of features found: ' + str(len(features[0])) + '. Training SVC...')
+    # estimator = SVC(kernel='linear')
+    # selector = RFECV(estimator, step=3, cv=10, scoring='f1_micro', verbose=1, n_jobs=-1)
+    # features = selector.fit_transform(features, train_data.target)
+    # mask = list(selector.support_)
+    with open('../optimal_feat_mask.pkl', 'rb') as f:
+        mask = pickle.load(f)
+    features = [bool_mask_list(feats, mask) for feats in features]
+    # print('Number of features found: ' + str(len(features[0])) + '. Training SVC...')
 
     # Classify and evaluate
     skf = sklearn.model_selection.StratifiedKFold(n_splits=10)
@@ -193,8 +197,18 @@ def main():
         validation_labels = [train_data.target[x] for x in validation_indexes]
 
         # Classify and add the scores to be able to average later
-        y_pred = classify(train_features, train_labels, validation_features)
+        y_pred, y_pred_probas = classify(train_features, train_labels, validation_features)
         scores.append(evaluate(validation_labels, y_pred))
+
+        # Save prediction probabilities
+        proba_save_path = '../data/preds/' + dataset + '/train/'
+        if not os.path.exists(proba_save_path):
+            os.makedirs(proba_save_path)
+        with open(proba_save_path + 'preds_split' + str(fold_id), 'wb+') as f:
+            pickle.dump(y_pred_probas, f)
+        with open(proba_save_path + 'labels_split' + str(fold_id), 'wb+') as f:
+            pickle.dump(validation_labels, f)
+
 
         # Print a newline
         print("")
@@ -212,13 +226,26 @@ def main():
     # TODO: findings. How does the score differ from the validation score? And why do you think this is?
     if test:
         print('Scores on test data:')
-        test_data = load_test_data()
-        test_features = [extract_features(text, w2v, idf_dict) for text in tqdm(test_data.data)]
+        test_data = load_test_data(dataset)
+        test_features = [extract_features(text, w2v, idf_dict) for text in test_data.data]
         test_features = scale(test_features)
         test_features = [bool_mask_list(feats, mask) for feats in test_features]
 
-        y_pred = classify(features, train_data.target, test_features)
+        y_pred, y_pred_probas = classify(features, train_data.target, test_features)
         evaluate(test_data.target, y_pred)
+
+        proba_save_path = '../data/preds/' + dataset + '/test/'
+        if not os.path.exists(proba_save_path):
+            os.makedirs(proba_save_path)
+        with open(proba_save_path + 'preds' + str(fold_id), 'wb+') as f:
+            pickle.dump(y_pred_probas, f)
+        with open(proba_save_path + 'labels' + str(fold_id), 'wb+') as f:
+            pickle.dump(test_data.target, f)
+
+
+def main():
+    experiments(dataset=str(250), test=True)
+
 
 # This piece of code is common practice in Python, is something like if "this file" is the main file to be ran, then
 # execute this remaining piece of code. The advantage of this is that your main loop will not be executed when you
